@@ -1,0 +1,34 @@
+{
+  "name": "breathing-app-native",
+  "version": "1.0.0",
+  "description": "Breathing App with Turbo Native",
+  "main": "index.js",
+  "scripts": {
+    "android": "npx react-native run-android",
+    "ios": "npx react-native run-ios",
+    "start": "npx react-native start",
+    "test": "jest",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@hotwired/turbo": "^8.0.4",
+    "react": "18.2.0",
+    "react-native": "0.73.6",
+    "react-native-turbo": "^1.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0",
+    "@babel/preset-env": "^7.20.0",
+    "@babel/runtime": "^7.20.0",
+    "@react-native/babel-preset": "0.73.21",
+    "@react-native/eslint-config": "0.73.2",
+    "@react-native/metro-config": "0.73.5",
+    "@react-native/typescript-config": "0.73.1",
+    "eslint": "^8.19.0",
+    "jest": "^29.6.3",
+    "metro-react-native-babel-preset": "0.77.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
