@@ -12,26 +12,30 @@ fi
 echo "📦 Configurando ambiente virtual..."
 cd backend
 
-if [ ! -d "venv" ]; then
-    python3 -m venv venv
+if [ ! -d ".venv" ]; then
+    python3 -m venv .venv
 fi
 
-source venv/bin/activate
+source .venv/bin/activate
 
 # Instalar dependências
 echo "📋 Instalando dependências do backend..."
 pip install -r requirements.txt
 
-# Iniciar backend
-echo "🔧 Iniciando backend FastAPI..."
-python main.py &
+# Executar migrações se necessário
+echo "🗄️ Executando migrações do banco de dados..."
+python manage.py migrate --noinput
+
+# Iniciar backend Django
+echo "🔧 Iniciando backend Django..."
+python manage.py runserver 0.0.0.0:8000 &
 BACKEND_PID=$!
 
 # Aguardar backend inicializar
-sleep 3
+sleep 5
 
 # Verificar se o backend está rodando
-if curl -s http://localhost:8000/health > /dev/null; then
+if curl -s http://localhost:8000/api/health/ > /dev/null; then
     echo "✅ Backend rodando em http://localhost:8000"
 else
     echo "❌ Erro ao iniciar backend"
@@ -46,7 +50,7 @@ cd ../frontend
 # Verificar se Python tem módulo http.server
 if python3 -c "import http.server" 2>/dev/null; then
     echo "✅ Iniciando servidor frontend em http://localhost:3000"
-    python3 -m http.server 3000 &
+    python3 server.py &
     FRONTEND_PID=$!
 else
     echo "❌ Módulo http.server não encontrado"
