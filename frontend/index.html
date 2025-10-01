@@ -3,23 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Breathing App</title>
+    <title>🌬️ Breathing App</title>
     <script type="module" src="https://unpkg.com/@hotwired/turbo@8.0.4/dist/turbo.es2017-esm.js"></script>
     <script type="module" src="https://unpkg.com/@hotwired/stimulus@3.2.2/dist/stimulus.js"></script>
-    <link rel="stylesheet" href="assets/stylesheets/application.css">
+    <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
     <div class="app-container">
+        <!-- Header -->
         <header class="app-header">
-            <h1>Respiração Guiada</h1>
-            <p>Escolha o número de rounds e comece sua prática</p>
+            <h1>🌬️ Respiração Guiada</h1>
+            <p>Técnica Wim Hof - Simples e Eficaz</p>
         </header>
 
-        <main id="main-content">
-            <!-- Conteúdo será carregado dinamicamente pelo JavaScript -->
+        <!-- Tela Principal -->
+        <main class="main-content">
+            <!-- Seleção de Rounds -->
+            <div id="round-selection" class="screen active">
+                <div class="selection-container">
+                    <h2>Quantos rounds você quer fazer?</h2>
+                    <div class="rounds-grid">
+                        <button class="round-btn" data-rounds="2">2 Rounds</button>
+                        <button class="round-btn" data-rounds="3">3 Rounds</button>
+                        <button class="round-btn" data-rounds="4">4 Rounds</button>
+                        <button class="round-btn" data-rounds="5">5 Rounds</button>
+                    </div>
+                    <button id="start-btn" class="start-btn" disabled>Iniciar Sessão</button>
+                </div>
+            </div>
+
+            <!-- Tela de Respiração -->
+            <div id="breathing-screen" class="screen">
+                <div class="session-info">
+                    <div class="round-display">
+                        <span>Round <span id="current-round">1</span> de <span id="total-rounds">3</span></span>
+                    </div>
+                    <div class="phase-display">
+                        <span id="phase-text">Respiração</span>
+                        <span id="breath-counter">Respiração 1 de 30</span>
+                        <span id="timer-display" class="hidden">0:00</span>
+                    </div>
+                </div>
+
+                <!-- Círculos Orgânicos -->
+                <div class="breathing-animation">
+                    <div class="circle-stack">
+                        <div class="circle circle-3"></div>
+                        <div class="circle circle-2"></div>
+                        <div class="circle circle-1">
+                            <span id="breath-number">1</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Controles -->
+                <div class="controls">
+                    <!-- Controles durante respiração -->
+                    <div id="breathing-controls" class="control-group active">
+                        <button id="pause-btn" class="control-btn">Pausar</button>
+                        <button id="stop-btn" class="control-btn secondary">Parar</button>
+                    </div>
+
+                    <!-- Controles durante hold -->
+                    <div id="hold-controls" class="control-group">
+                        <div class="instruction">
+                            <h3>Prenda a respiração!</h3>
+                            <p>Segure o ar e relaxe</p>
+                        </div>
+                        <button id="breathe-btn" class="control-btn primary">Respirar</button>
+                    </div>
+
+                    <!-- Controles durante recovery -->
+                    <div id="recovery-controls" class="control-group">
+                        <div class="instruction">
+                            <h3>Respire fundo!</h3>
+                            <p>Inspire profundamente e segure por 15 segundos</p>
+                        </div>
+                        <button id="release-btn" class="control-btn primary">Soltar</button>
+                    </div>
+                </div>
+
+                <!-- Tempos dos Rounds -->
+                <div id="round-times" class="round-times hidden">
+                    <h4>Tempos dos Rounds:</h4>
+                    <div id="times-list"></div>
+                </div>
+            </div>
+
+            <!-- Tela de Conclusão -->
+            <div id="completion-screen" class="screen">
+                <div class="completion-container">
+                    <h2>🎉 Sessão Concluída!</h2>
+                    <p>Parabéns! Você completou sua prática de respiração.</p>
+                    
+                    <div class="summary">
+                        <div class="summary-item">
+                            <strong>Rounds:</strong> <span id="summary-rounds">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <strong>Total de respirações:</strong> <span id="summary-breaths">0</span>
+                        </div>
+                    </div>
+
+                    <div id="hold-summary" class="hold-summary">
+                        <h4>Tempos de Retenção:</h4>
+                        <div id="hold-list"></div>
+                        <div class="totals">
+                            <div>Tempo total: <span id="total-hold-time">0m 0s</span></div>
+                            <div>Tempo médio: <span id="avg-hold-time">0m 0s</span></div>
+                        </div>
+                    </div>
+
+                    <button id="new-session-btn" class="start-btn">Nova Sessão</button>
+                </div>
+            </div>
         </main>
     </div>
 
-    <script src="assets/javascripts/breathing-app.js"></script>
+    <script src="assets/app.js"></script>
 </body>
 </html>

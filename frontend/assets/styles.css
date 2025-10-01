@@ -1,0 +1,573 @@
+/* Reset e Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: white;
+    overflow-x: hidden;
+}
+
+/* Layout Principal */
+.app-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-header {
+    text-align: center;
+    padding: 2rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.app-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 300;
+}
+
+.app-header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.main-content {
+    flex: 1;
+    position: relative;
+}
+
+/* Sistema de Telas */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.screen.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Tela de Seleção */
+.selection-container {
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+}
+
+.selection-container h2 {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    font-weight: 400;
+}
+
+.rounds-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.round-btn {
+    padding: 1.2rem 2rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.round-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+.round-btn.selected {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: white;
+    font-weight: 600;
+}
+
+.start-btn {
+    width: 100%;
+    padding: 1.5rem 2rem;
+    border: none;
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+    color: white;
+    border-radius: 12px;
+    font-size: 1.3rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.start-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.start-btn:disabled {
+    background: rgba(255, 255, 255, 0.2);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Tela de Respiração */
+.session-info {
+    position: absolute;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
+}
+
+.round-display {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.phase-display {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+#phase-text {
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+#breath-counter {
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+#timer-display {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #3498db;
+    text-shadow: 0 2px 10px rgba(52, 152, 219, 0.5);
+}
+
+/* Círculos Orgânicos */
+.breathing-animation {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.circle-stack {
+    position: relative;
+    width: 250px;
+    height: 250px;
+}
+
+.circle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.1),
+        inset 0 2px 8px rgba(255, 255, 255, 0.3);
+}
+
+.circle-1 {
+    width: 250px;
+    height: 250px;
+    transform: translate(-50%, -50%) scale(1);
+    background: linear-gradient(135deg, #FFF8E1, #FFDA7A);
+    z-index: 3;
+}
+
+.circle-2 {
+    width: 220px;
+    height: 220px;
+    transform: translate(-50%, -50%) scale(1);
+    background: linear-gradient(135deg, #FFDA7A, #FF9843);
+    z-index: 2;
+    opacity: 0.8;
+}
+
+.circle-3 {
+    width: 190px;
+    height: 190px;
+    transform: translate(-50%, -50%) scale(1);
+    background: linear-gradient(135deg, #FF9843, #FF6B35);
+    z-index: 1;
+    opacity: 0.6;
+}
+
+.circle span {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #8B4513;
+    text-shadow: 0 2px 8px rgba(139, 69, 19, 0.3);
+    z-index: 10;
+}
+
+/* Animações de Respiração */
+.circle-stack.inhale .circle-1 {
+    transform: translate(-50%, -50%) scale(1.3);
+    box-shadow: 
+        0 12px 40px rgba(255, 255, 255, 0.2),
+        inset 0 4px 12px rgba(255, 255, 255, 0.4);
+}
+
+.circle-stack.inhale .circle-2 {
+    transform: translate(-50%, -50%) scale(1.25);
+}
+
+.circle-stack.inhale .circle-3 {
+    transform: translate(-50%, -50%) scale(1.2);
+}
+
+.circle-stack.exhale .circle-1 {
+    transform: translate(-50%, -50%) scale(0.8);
+}
+
+.circle-stack.exhale .circle-2 {
+    transform: translate(-50%, -50%) scale(0.85);
+}
+
+.circle-stack.exhale .circle-3 {
+    transform: translate(-50%, -50%) scale(0.9);
+}
+
+/* Animações de Hold */
+.circle-stack.holding .circle-1 {
+    background: linear-gradient(135deg, #ADD8E6, #87CEEB);
+    animation: pulse-hold 2s infinite;
+}
+
+.circle-stack.holding .circle-2 {
+    background: linear-gradient(135deg, #87CEEB, #4682B4);
+    animation: pulse-hold 2s infinite 0.3s;
+}
+
+.circle-stack.holding .circle-3 {
+    background: linear-gradient(135deg, #4682B4, #2F4F4F);
+    animation: pulse-hold 2s infinite 0.6s;
+}
+
+/* Animações de Recovery */
+.circle-stack.recovery .circle-1 {
+    background: linear-gradient(135deg, #90EE90, #66CDAA);
+    animation: pulse-recovery 1.5s infinite;
+}
+
+.circle-stack.recovery .circle-2 {
+    background: linear-gradient(135deg, #66CDAA, #3CB371);
+    animation: pulse-recovery 1.5s infinite 0.2s;
+}
+
+.circle-stack.recovery .circle-3 {
+    background: linear-gradient(135deg, #3CB371, #228B22);
+    animation: pulse-recovery 1.5s infinite 0.4s;
+}
+
+@keyframes pulse-hold {
+    0%, 100% { 
+        opacity: 0.6;
+        transform: translate(-50%, -50%) scale(var(--base-scale, 1));
+    }
+    50% { 
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(calc(var(--base-scale, 1) * 1.05));
+    }
+}
+
+@keyframes pulse-recovery {
+    0%, 100% { 
+        opacity: 0.7;
+        transform: translate(-50%, -50%) scale(var(--base-scale, 1));
+    }
+    50% { 
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(calc(var(--base-scale, 1) * 1.1));
+    }
+}
+
+/* Controles */
+.controls {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 400px;
+    padding: 0 2rem;
+}
+
+.control-group {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.control-group.active {
+    display: flex;
+}
+
+.control-btn {
+    padding: 1rem 2rem;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    min-width: 120px;
+}
+
+.control-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+.control-btn.primary {
+    background: linear-gradient(45deg, #00b894, #00a085);
+    border-color: #00a085;
+    font-size: 1.2rem;
+    padding: 1.2rem 2.5rem;
+}
+
+.control-btn.secondary {
+    background: rgba(255, 107, 107, 0.3);
+    border-color: rgba(255, 107, 107, 0.6);
+}
+
+.instruction {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.instruction h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #3498db;
+}
+
+.instruction p {
+    opacity: 0.9;
+}
+
+/* Round Times */
+.round-times {
+    position: absolute;
+    bottom: 8rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-radius: 12px;
+    backdrop-filter: blur(5px);
+    max-width: 300px;
+    width: 90%;
+}
+
+.round-times h4 {
+    text-align: center;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.round-time {
+    text-align: center;
+    padding: 0.3rem;
+    font-weight: 500;
+    color: #3498db;
+}
+
+.round-time.current-round {
+    background: rgba(52, 152, 219, 0.2);
+    border-radius: 8px;
+    padding: 0.5rem;
+    font-weight: 700;
+    color: white;
+}
+
+/* Tela de Conclusão */
+.completion-container {
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 3rem 2rem;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.completion-container h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    font-weight: 400;
+}
+
+.completion-container p {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.summary {
+    text-align: left;
+    margin-bottom: 2rem;
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.hold-summary {
+    margin-bottom: 2rem;
+}
+
+.hold-summary h4 {
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.hold-time-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.3rem 0;
+    font-weight: 500;
+}
+
+.hold-time-value {
+    color: #3498db;
+    font-weight: 700;
+}
+
+.totals {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 0.9rem;
+}
+
+.totals div {
+    margin-bottom: 0.3rem;
+}
+
+/* Estados de Visibilidade */
+.hidden {
+    display: none !important;
+}
+
+/* Animações de Crescimento */
+.circle-stack.growing .circle-1 {
+    --base-scale: 1;
+}
+
+.circle-stack.growing .circle-2 {
+    --base-scale: 0.88;
+}
+
+.circle-stack.growing .circle-3 {
+    --base-scale: 0.76;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .app-header h1 {
+        font-size: 2rem;
+    }
+    
+    .rounds-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .circle-stack {
+        width: 200px;
+        height: 200px;
+    }
+    
+    .circle-1 {
+        width: 200px;
+        height: 200px;
+    }
+    
+    .circle-2 {
+        width: 170px;
+        height: 170px;
+    }
+    
+    .circle-3 {
+        width: 140px;
+        height: 140px;
+    }
+    
+    .circle span {
+        font-size: 2.5rem;
+    }
+    
+    .session-info {
+        top: 1rem;
+        padding: 0.8rem 1.5rem;
+    }
+    
+    .controls {
+        padding: 0 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .completion-container {
+        padding: 2rem 1rem;
+        margin: 1rem;
+    }
+    
+    .circle-stack {
+        width: 150px;
+        height: 150px;
+    }
+    
+    .circle-1 { width: 150px; height: 150px; }
+    .circle-2 { width: 130px; height: 130px; }
+    .circle-3 { width: 110px; height: 110px; }
+    
+    .circle span {
+        font-size: 2rem;
+    }
+}
