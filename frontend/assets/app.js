@@ -28,6 +28,9 @@ class BreathingApp {
         // Backend
         this.apiUrl = 'http://localhost:8000/api';
         this.sessionId = null;
+        this.authToken = localStorage.getItem('auth_token');
+        this.currentUser = localStorage.getItem('current_user');
+        this.isLoggedIn = !!this.authToken;
         
         this.init();
     }
@@ -35,7 +38,37 @@ class BreathingApp {
     init() {
         console.log('🚀 Breathing App iniciado');
         this.setupEventListeners();
+        
+        if (this.isLoggedIn) {
+            this.showMainApp();
+        } else {
+            this.showScreen('login-screen');
+        }
+    }
+
+    showMainApp() {
+        // Mostrar navegação
+        document.querySelector('.main-nav').style.display = 'flex';
         this.showScreen('round-selection');
+        this.loadUserData();
+        this.testBackendConnection();
+    }
+
+    async testBackendConnection() {
+        try {
+            console.log('🔍 Testando conexão com backend...');
+            const response = await fetch(`${this.apiUrl}/health/`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Backend conectado:', data);
+            } else {
+                console.log('⚠️ Backend respondeu com erro:', response.status);
+            }
+        } catch (error) {
+            console.log('❌ Backend não disponível:', error.message);
+            console.log('🔄 App funcionará em modo demo');
+        }
     }
 
     setupEventListeners() {
@@ -71,6 +104,44 @@ class BreathingApp {
         
         document.getElementById('new-session-btn').addEventListener('click', () => {
             this.resetToStart();
+        });
+
+        // Navegação
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const screenId = e.target.dataset.screen;
+                this.navigateToScreen(screenId);
+            });
+        });
+
+        // Amigos
+        document.getElementById('search-friend-btn').addEventListener('click', () => {
+            this.searchFriend();
+        });
+
+        document.getElementById('friend-search').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.searchFriend();
+            }
+        });
+
+        document.getElementById('close-modal').addEventListener('click', () => {
+            this.closeModal();
+        });
+
+        // Login
+        document.getElementById('login-btn').addEventListener('click', () => {
+            this.handleLogin();
+        });
+
+        document.getElementById('password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.handleLogin();
+            }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            this.handleLogout();
         });
     }
 
@@ -596,6 +667,713 @@ class BreathingApp {
             clearInterval(this.recoveryTimer);
             this.recoveryTimer = null;
         }
+    }
+
+    // Navegação
+    navigateToScreen(screenId) {
+        // Atualizar navegação visual
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-screen="${screenId}"]`).classList.add('active');
+        
+        // Mostrar tela
+        this.showScreen(screenId);
+        
+        // Carregar dados específicos da tela
+        if (screenId === 'history-screen') {
+            this.loadHistoryData();
+        } else if (screenId === 'friends-screen') {
+            this.loadFriendsData();
+        }
+    }
+
+    // Autenticação
+    async handleLogin() {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        
+        if (!username || !password) {
+            alert('Preencha username e senha');
+            return;
+        }
+        
+        try {
+            // Tentar login real
+            const response = await fetch(`${this.apiUrl}/auth/login/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.authToken = data.access;
+                this.currentUser = username;
+                localStorage.setItem('auth_token', this.authToken);
+                localStorage.setItem('current_user', username);
+                this.isLoggedIn = true;
+                
+                console.log('✅ Login realizado com sucesso');
+                this.showMainApp();
+            } else {
+                throw new Error('Credenciais inválidas');
+            }
+        } catch (error) {
+            console.log('🔄 Modo demo - login offline');
+            // Modo demo/offline
+            this.authToken = 'demo_token';
+            this.currentUser = username;
+            localStorage.setItem('auth_token', 'demo_token');
+            localStorage.setItem('current_user', username);
+            this.isLoggedIn = true;
+            
+            // Criar dados de teste
+            this.createTestData();
+            this.showMainApp();
+        }
+    }
+
+    createTestData() {
+        // Criar sessões de teste para demonstração
+        const testSessions = [];
+        const today = new Date();
+        
+        // Sessões dos últimos 5 dias
+        for (let i = 0; i < 5; i++) {
+            const sessionDate = new Date(today);
+            sessionDate.setDate(today.getDate() - i);
+            sessionDate.setHours(9 + i, 30 + (i * 15), 0, 0);
+            
+            const rounds = 2 + (i % 4); // 2-5 rounds
+            const holdTimes = [];
+            
+            for (let r = 1; r <= rounds; r++) {
+                holdTimes.push({
+                    round: r,
+                    hold: `${Math.floor(Math.random() * 2) + 1}m ${Math.floor(Math.random() * 60)}s`,
+                    hold_seconds: 60 + Math.floor(Math.random() * 120),
+                    recovery: `${Math.floor(Math.random() * 10) + 15}s`
+                });
+            }
+            
+            testSessions.push({
+                id: i + 1,
+                rounds: rounds,
+                breaths_per_round: 30,
+                started_at: sessionDate.toISOString(),
+                completed_at: new Date(sessionDate.getTime() + (rounds * 5 * 60 * 1000)).toISOString(),
+                actual_duration_formatted: `${rounds * 5}m 30s`,
+                planned_duration_formatted: `${rounds * 5}m 19s`,
+                hold_times_formatted: holdTimes,
+                total_hold_time_formatted: `${Math.floor(Math.random() * 5) + 3}m ${Math.floor(Math.random() * 60)}s`,
+                status: 'completed'
+            });
+        }
+        
+        localStorage.setItem('demo_sessions', JSON.stringify(testSessions));
+        console.log('📊 Dados de teste criados:', testSessions.length, 'sessões');
+    }
+
+    handleLogout() {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('current_user');
+        localStorage.removeItem('demo_sessions');
+        
+        this.authToken = null;
+        this.currentUser = null;
+        this.isLoggedIn = false;
+        
+        document.querySelector('.main-nav').style.display = 'none';
+        this.showScreen('login-screen');
+        
+        console.log('👋 Logout realizado');
+    }
+
+    // Carregar dados do usuário
+    async loadUserData() {
+        try {
+            if (this.authToken === 'demo_token') {
+                // Modo demo
+                console.log('📊 Carregando dados demo');
+                return;
+            }
+            
+            const response = await fetch(`${this.apiUrl}/sessions/stats/`, {
+                headers: { 'Authorization': `Bearer ${this.authToken}` }
+            });
+            const stats = await response.json();
+            console.log('📊 Estatísticas carregadas:', stats);
+        } catch (error) {
+            console.log('❌ Erro ao carregar dados do usuário');
+        }
+    }
+
+    // Histórico
+    async loadHistoryData() {
+        console.log('📊 Carregando dados do histórico...');
+        console.log('🔑 Token atual:', this.authToken ? 'Presente' : 'Ausente');
+        
+        try {
+            if (this.authToken === 'demo_token') {
+                // Usar dados demo
+                const demoSessions = JSON.parse(localStorage.getItem('demo_sessions') || '[]');
+                const demoStats = {
+                    total_sessions: demoSessions.length,
+                    total_time: `${demoSessions.length * 15}m`,
+                    sessions_this_week: Math.min(demoSessions.length, 7),
+                    sessions_this_month: demoSessions.length
+                };
+                
+                console.log('📊 Carregando dados demo para histórico:', demoSessions.length, 'sessões');
+                this.displayHistoryData(demoStats, demoSessions);
+                return;
+            }
+            
+            // Carregar dados reais da API
+            const headers = { 
+                'Authorization': `Bearer ${this.authToken}`,
+                'Content-Type': 'application/json'
+            };
+            
+            console.log('🌐 Fazendo requisição para:', `${this.apiUrl}/sessions/stats/`);
+            const statsResponse = await fetch(`${this.apiUrl}/sessions/stats/`, { headers });
+            console.log('📈 Stats response status:', statsResponse.status);
+            
+            if (!statsResponse.ok) {
+                throw new Error(`Stats API error: ${statsResponse.status}`);
+            }
+            
+            const stats = await statsResponse.json();
+            console.log('📊 Stats recebidas:', stats);
+            
+            console.log('🌐 Fazendo requisição para:', `${this.apiUrl}/sessions/`);
+            const sessionsResponse = await fetch(`${this.apiUrl}/sessions/`, { headers });
+            console.log('📋 Sessions response status:', sessionsResponse.status);
+            
+            if (!sessionsResponse.ok) {
+                throw new Error(`Sessions API error: ${sessionsResponse.status}`);
+            }
+            
+            const sessions = await sessionsResponse.json();
+            console.log('📋 Sessões recebidas:', sessions.length, 'sessões');
+            
+            this.displayHistoryData(stats, sessions);
+        } catch (error) {
+            console.log('❌ Erro ao carregar histórico:', error);
+            console.log('🔄 Tentando modo offline...');
+            this.displayOfflineHistory();
+        }
+    }
+
+    displayHistoryData(stats, sessions) {
+        // Estatísticas gerais
+        document.getElementById('current-streak').textContent = this.calculateStreak(sessions);
+        document.getElementById('total-sessions').textContent = stats.total_sessions || 0;
+        document.getElementById('total-time').textContent = stats.total_time || '0h 0m';
+        
+        // Últimos 7 dias
+        this.displayWeekView(sessions);
+        
+        // Sessões de hoje
+        this.displayTodaySessions(sessions);
+        
+        // Histórico completo
+        this.displaySessionsHistory(sessions);
+    }
+
+    displayOfflineHistory() {
+        console.log('🔄 Modo offline - criando dados demo');
+        
+        // Criar dados demo se não existirem
+        if (!localStorage.getItem('demo_sessions')) {
+            this.createTestData();
+        }
+        
+        // Usar dados demo
+        const demoSessions = JSON.parse(localStorage.getItem('demo_sessions') || '[]');
+        const demoStats = {
+            total_sessions: demoSessions.length,
+            total_time: `${demoSessions.length * 15}m`,
+            sessions_this_week: Math.min(demoSessions.length, 7),
+            sessions_this_month: demoSessions.length
+        };
+        
+        console.log('📊 Exibindo dados offline:', demoSessions.length, 'sessões');
+        this.displayHistoryData(demoStats, demoSessions);
+    }
+
+    displayWeekView(sessions) {
+        const daysGrid = document.getElementById('days-grid');
+        daysGrid.innerHTML = '';
+        
+        const today = new Date();
+        const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            
+            const dayCard = document.createElement('div');
+            dayCard.className = 'day-card';
+            
+            // Verificar se tem sessões neste dia
+            const sessionsThisDay = this.getSessionsForDate(sessions, date);
+            if (sessionsThisDay.length > 0) {
+                dayCard.classList.add('completed');
+            }
+            
+            // Marcar hoje
+            if (i === 0) {
+                dayCard.classList.add('today');
+            }
+            
+            dayCard.innerHTML = `
+                <div class="day-name">${dayNames[date.getDay()]}</div>
+                <div class="day-date">${date.getDate()}</div>
+                <div class="day-sessions">${sessionsThisDay.length} sessões</div>
+            `;
+            
+            daysGrid.appendChild(dayCard);
+        }
+    }
+
+    displayTodaySessions(sessions) {
+        const todayList = document.getElementById('today-sessions-list');
+        todayList.innerHTML = '';
+        
+        const today = new Date();
+        const todaySessions = this.getSessionsForDate(sessions, today);
+        
+        if (todaySessions.length === 0) {
+            todayList.innerHTML = '<p style="opacity: 0.7; text-align: center;">Nenhuma sessão hoje ainda</p>';
+            return;
+        }
+        
+        todaySessions.forEach(session => {
+            const sessionDiv = document.createElement('div');
+            sessionDiv.className = 'session-item';
+            
+            const startTime = new Date(session.started_at);
+            const timeString = startTime.toLocaleTimeString('pt-BR', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            sessionDiv.innerHTML = `
+                <div class="session-header">
+                    <span class="session-time">${timeString}</span>
+                    <span class="session-duration">${session.actual_duration_formatted || session.planned_duration_formatted}</span>
+                </div>
+                <div class="session-details">
+                    ${session.rounds} rounds • ${session.breaths_per_round} respirações por round
+                </div>
+                <div class="session-rounds">
+                    ${this.formatSessionRounds(session.hold_times_formatted)}
+                </div>
+            `;
+            
+            todayList.appendChild(sessionDiv);
+        });
+    }
+
+    displaySessionsHistory(sessions) {
+        const historyDiv = document.getElementById('sessions-history');
+        historyDiv.innerHTML = '';
+        
+        // Agrupar por data
+        const sessionsByDate = this.groupSessionsByDate(sessions);
+        
+        Object.keys(sessionsByDate).slice(0, 10).forEach(dateStr => {
+            const dateSessions = sessionsByDate[dateStr];
+            const date = new Date(dateStr);
+            
+            const dateGroup = document.createElement('div');
+            dateGroup.className = 'date-group';
+            
+            const dateHeader = document.createElement('h4');
+            dateHeader.textContent = date.toLocaleDateString('pt-BR', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            dateGroup.appendChild(dateHeader);
+            
+            dateSessions.forEach(session => {
+                const sessionDiv = document.createElement('div');
+                sessionDiv.className = 'session-item';
+                
+                const startTime = new Date(session.started_at);
+                const timeString = startTime.toLocaleTimeString('pt-BR', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                
+                sessionDiv.innerHTML = `
+                    <div class="session-header">
+                        <span class="session-time">${timeString}</span>
+                        <span class="session-duration">${session.actual_duration_formatted || session.planned_duration_formatted}</span>
+                    </div>
+                    <div class="session-details">
+                        ${session.rounds} rounds • Total: ${session.total_hold_time_formatted || '0s'} retenção
+                    </div>
+                    <div class="session-rounds">
+                        ${this.formatSessionRounds(session.hold_times_formatted)}
+                    </div>
+                `;
+                
+                dateGroup.appendChild(sessionDiv);
+            });
+            
+            historyDiv.appendChild(dateGroup);
+        });
+    }
+
+    // Utilitários para histórico
+    getSessionsForDate(sessions, date) {
+        const dateStr = date.toISOString().split('T')[0];
+        return sessions.filter(session => {
+            const sessionDate = new Date(session.started_at).toISOString().split('T')[0];
+            return sessionDate === dateStr;
+        });
+    }
+
+    groupSessionsByDate(sessions) {
+        const grouped = {};
+        sessions.forEach(session => {
+            const date = new Date(session.started_at).toISOString().split('T')[0];
+            if (!grouped[date]) {
+                grouped[date] = [];
+            }
+            grouped[date].push(session);
+        });
+        
+        // Ordenar por data (mais recente primeiro)
+        const sortedKeys = Object.keys(grouped).sort().reverse();
+        const sortedGrouped = {};
+        sortedKeys.forEach(key => {
+            sortedGrouped[key] = grouped[key];
+        });
+        
+        return sortedGrouped;
+    }
+
+    calculateStreak(sessions) {
+        if (!sessions || sessions.length === 0) return 0;
+        
+        const today = new Date();
+        let streak = 0;
+        let currentDate = new Date(today);
+        
+        // Verificar dias consecutivos a partir de hoje
+        while (true) {
+            const sessionsThisDay = this.getSessionsForDate(sessions, currentDate);
+            if (sessionsThisDay.length > 0) {
+                streak++;
+                currentDate.setDate(currentDate.getDate() - 1);
+            } else {
+                break;
+            }
+        }
+        
+        return streak;
+    }
+
+    formatSessionRounds(holdTimesFormatted) {
+        if (!holdTimesFormatted || holdTimesFormatted.length === 0) {
+            return '<span style="opacity: 0.6;">Sem dados de retenção</span>';
+        }
+        
+        return holdTimesFormatted.map(round => 
+            `<div class="round-detail">R${round.round}: ${round.hold}</div>`
+        ).join('');
+    }
+
+    // Sistema de Amigos
+    async loadFriendsData() {
+        try {
+            // Carregar amigos
+            const friendsResponse = await fetch(`${this.apiUrl}/friendships/friends/`);
+            const friends = await friendsResponse.json();
+            
+            // Carregar solicitações pendentes
+            const pendingResponse = await fetch(`${this.apiUrl}/friendships/pending_requests/`);
+            const pendingRequests = await pendingResponse.json();
+            
+            this.displayFriendsData(friends, pendingRequests);
+        } catch (error) {
+            console.log('❌ Erro ao carregar dados de amigos');
+        }
+    }
+
+    displayFriendsData(friends, pendingRequests) {
+        // Lista de amigos
+        const friendsList = document.getElementById('friends-list');
+        friendsList.innerHTML = '';
+        
+        if (friends.length === 0) {
+            friendsList.innerHTML = '<p style="opacity: 0.7; text-align: center;">Nenhum amigo ainda</p>';
+        } else {
+            friends.forEach(friend => {
+                const friendDiv = document.createElement('div');
+                friendDiv.className = 'friend-item';
+                
+                friendDiv.innerHTML = `
+                    <div class="friend-info">
+                        <div class="friend-name">${friend.username}</div>
+                        <div class="friend-stats">Membro desde ${new Date(friend.date_joined).toLocaleDateString('pt-BR')}</div>
+                    </div>
+                    <div class="friend-actions">
+                        <button class="friend-btn" onclick="breathingApp.viewFriendStats('${friend.username}', ${friend.id})">
+                            Ver Stats
+                        </button>
+                    </div>
+                `;
+                
+                friendsList.appendChild(friendDiv);
+            });
+        }
+        
+        // Solicitações pendentes
+        const pendingList = document.getElementById('pending-requests-list');
+        pendingList.innerHTML = '';
+        
+        if (pendingRequests.length === 0) {
+            pendingList.innerHTML = '<p style="opacity: 0.7; text-align: center;">Nenhuma solicitação pendente</p>';
+        } else {
+            pendingRequests.forEach(request => {
+                const requestDiv = document.createElement('div');
+                requestDiv.className = 'friend-item';
+                
+                requestDiv.innerHTML = `
+                    <div class="friend-info">
+                        <div class="friend-name">${request.requester.username}</div>
+                        <div class="friend-stats">Solicitação enviada em ${new Date(request.created_at).toLocaleDateString('pt-BR')}</div>
+                    </div>
+                    <div class="friend-actions">
+                        <button class="friend-btn accept" onclick="breathingApp.acceptFriend(${request.id})">
+                            Aceitar
+                        </button>
+                        <button class="friend-btn reject" onclick="breathingApp.rejectFriend(${request.id})">
+                            Rejeitar
+                        </button>
+                    </div>
+                `;
+                
+                pendingList.appendChild(requestDiv);
+            });
+        }
+    }
+
+    async searchFriend() {
+        const searchTerm = document.getElementById('friend-search').value.trim();
+        if (!searchTerm) return;
+        
+        try {
+            const response = await fetch(`${this.apiUrl}/users/search/?q=${searchTerm}`);
+            const users = await response.json();
+            
+            const resultsDiv = document.getElementById('search-results');
+            resultsDiv.innerHTML = '';
+            
+            if (users.length === 0) {
+                resultsDiv.innerHTML = '<p style="opacity: 0.7;">Nenhum usuário encontrado</p>';
+                return;
+            }
+            
+            users.forEach(user => {
+                const userDiv = document.createElement('div');
+                userDiv.className = 'friend-item';
+                
+                userDiv.innerHTML = `
+                    <div class="friend-info">
+                        <div class="friend-name">${user.username}</div>
+                        <div class="friend-stats">${user.first_name} ${user.last_name}</div>
+                    </div>
+                    <div class="friend-actions">
+                        <button class="friend-btn" onclick="breathingApp.sendFriendRequest('${user.username}')">
+                            Adicionar
+                        </button>
+                    </div>
+                `;
+                
+                resultsDiv.appendChild(userDiv);
+            });
+        } catch (error) {
+            console.log('❌ Erro ao buscar usuários');
+        }
+    }
+
+    async sendFriendRequest(username) {
+        try {
+            await fetch(`${this.apiUrl}/friendships/send_request/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ addressee_username: username })
+            });
+            
+            alert('Solicitação de amizade enviada!');
+            document.getElementById('search-results').innerHTML = '';
+            document.getElementById('friend-search').value = '';
+        } catch (error) {
+            alert('Erro ao enviar solicitação');
+        }
+    }
+
+    async acceptFriend(requestId) {
+        try {
+            await fetch(`${this.apiUrl}/friendships/${requestId}/accept/`, {
+                method: 'POST'
+            });
+            
+            alert('Amizade aceita!');
+            this.loadFriendsData();
+        } catch (error) {
+            alert('Erro ao aceitar amizade');
+        }
+    }
+
+    async rejectFriend(requestId) {
+        try {
+            await fetch(`${this.apiUrl}/friendships/${requestId}/reject/`, {
+                method: 'POST'
+            });
+            
+            alert('Solicitação rejeitada');
+            this.loadFriendsData();
+        } catch (error) {
+            alert('Erro ao rejeitar solicitação');
+        }
+    }
+
+    async viewFriendStats(friendName, friendId) {
+        try {
+            // Carregar estatísticas do amigo
+            const response = await fetch(`${this.apiUrl}/sessions/?user=${friendId}`);
+            const friendSessions = await response.json();
+            
+            this.showFriendStatsModal(friendName, friendSessions);
+        } catch (error) {
+            alert('Erro ao carregar estatísticas do amigo');
+        }
+    }
+
+    showFriendStatsModal(friendName, sessions) {
+        document.getElementById('friend-name').textContent = `Estatísticas de ${friendName}`;
+        
+        const modalContent = document.getElementById('friend-stats-content');
+        
+        // Calcular estatísticas
+        const totalSessions = sessions.length;
+        const totalHoldTime = sessions.reduce((sum, session) => {
+            return sum + (session.total_hold_time || 0);
+        }, 0);
+        
+        const streak = this.calculateStreak(sessions);
+        
+        modalContent.innerHTML = `
+            <div class="stats-overview">
+                <div class="stat-card">
+                    <div class="stat-number">${totalSessions}</div>
+                    <div class="stat-label">Sessões Totais</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${streak}</div>
+                    <div class="stat-label">Dias Consecutivos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${Math.floor(totalHoldTime / 60)}m</div>
+                    <div class="stat-label">Tempo Total Retenção</div>
+                </div>
+            </div>
+            
+            <div class="week-view">
+                <h4>Últimos 7 Dias</h4>
+                <div class="days-grid" id="friend-days-grid"></div>
+            </div>
+            
+            <div class="detailed-history">
+                <h4>Sessões Recentes</h4>
+                <div id="friend-sessions-history"></div>
+            </div>
+        `;
+        
+        // Mostrar modal
+        document.getElementById('friend-stats-modal').classList.remove('hidden');
+        
+        // Preencher dados específicos
+        this.displayFriendWeekView(sessions);
+        this.displayFriendHistory(sessions);
+    }
+
+    displayFriendWeekView(sessions) {
+        const daysGrid = document.getElementById('friend-days-grid');
+        if (!daysGrid) return;
+        
+        daysGrid.innerHTML = '';
+        
+        const today = new Date();
+        const dayNames = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
+        
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            
+            const dayCard = document.createElement('div');
+            dayCard.className = 'day-card';
+            
+            const sessionsThisDay = this.getSessionsForDate(sessions, date);
+            if (sessionsThisDay.length > 0) {
+                dayCard.classList.add('completed');
+            }
+            
+            dayCard.innerHTML = `
+                <div class="day-name">${dayNames[date.getDay()]}</div>
+                <div class="day-date">${date.getDate()}</div>
+                <div class="day-sessions">${sessionsThisDay.length}</div>
+            `;
+            
+            daysGrid.appendChild(dayCard);
+        }
+    }
+
+    displayFriendHistory(sessions) {
+        const historyDiv = document.getElementById('friend-sessions-history');
+        if (!historyDiv) return;
+        
+        historyDiv.innerHTML = '';
+        
+        sessions.slice(0, 5).forEach(session => {
+            const sessionDiv = document.createElement('div');
+            sessionDiv.className = 'session-item';
+            
+            const startTime = new Date(session.started_at);
+            const dateString = startTime.toLocaleDateString('pt-BR');
+            const timeString = startTime.toLocaleTimeString('pt-BR', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            sessionDiv.innerHTML = `
+                <div class="session-header">
+                    <span class="session-time">${dateString} ${timeString}</span>
+                    <span class="session-duration">${session.actual_duration_formatted || session.planned_duration_formatted}</span>
+                </div>
+                <div class="session-details">
+                    ${session.rounds} rounds • ${session.total_hold_time_formatted || '0s'} retenção total
+                </div>
+                <div class="session-rounds">
+                    ${this.formatSessionRounds(session.hold_times_formatted)}
+                </div>
+            `;
+            
+            historyDiv.appendChild(sessionDiv);
+        });
+    }
+
+    closeModal() {
+        document.getElementById('friend-stats-modal').classList.add('hidden');
     }
 
     // Backend (opcional)

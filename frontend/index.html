@@ -14,12 +14,36 @@
         <header class="app-header">
             <h1>🌬️ Respiração Guiada</h1>
             <p>Técnica Wim Hof - Simples e Eficaz</p>
+            
+            <!-- Menu de navegação -->
+            <nav class="main-nav" style="display: none;">
+                <button class="nav-btn active" data-screen="round-selection">🏠 Início</button>
+                <button class="nav-btn" data-screen="history-screen">📊 Histórico</button>
+                <button class="nav-btn" data-screen="friends-screen">👥 Amigos</button>
+                <button id="logout-btn" class="nav-btn logout">🚪 Sair</button>
+            </nav>
         </header>
 
         <!-- Tela Principal -->
         <main class="main-content">
+            <!-- Tela de Login -->
+            <div id="login-screen" class="screen active">
+                <div class="login-container">
+                    <h2>🔐 Login</h2>
+                    <div class="login-form">
+                        <input type="text" id="username" placeholder="Nome de usuário" />
+                        <input type="password" id="password" placeholder="Senha" />
+                        <button id="login-btn" class="start-btn">Entrar</button>
+                        <p class="login-help">
+                            💡 Para testar: use qualquer username/senha<br>
+                            O app funcionará em modo demo
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Seleção de Rounds -->
-            <div id="round-selection" class="screen active">
+            <div id="round-selection" class="screen">
                 <div class="selection-container">
                     <h2>Quantos rounds você quer fazer?</h2>
                     <div class="rounds-grid">
@@ -115,6 +139,99 @@
                     </div>
 
                     <button id="new-session-btn" class="start-btn">Nova Sessão</button>
+                </div>
+            </div>
+
+            <!-- Tela de Histórico -->
+            <div id="history-screen" class="screen">
+                <div class="history-container">
+                    <h2>📊 Seu Histórico</h2>
+                    
+                    <!-- Streak e estatísticas gerais -->
+                    <div class="stats-overview">
+                        <div class="stat-card">
+                            <div class="stat-number" id="current-streak">0</div>
+                            <div class="stat-label">Dias Consecutivos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="total-sessions">0</div>
+                            <div class="stat-label">Sessões Totais</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="total-time">0h 0m</div>
+                            <div class="stat-label">Tempo Total</div>
+                        </div>
+                    </div>
+
+                    <!-- Últimos 7 dias -->
+                    <div class="week-view">
+                        <h3>Últimos 7 Dias</h3>
+                        <div class="days-grid" id="days-grid">
+                            <!-- Será preenchido pelo JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Sessões de hoje -->
+                    <div class="today-sessions">
+                        <h3>Sessões de Hoje</h3>
+                        <div id="today-sessions-list">
+                            <!-- Será preenchido pelo JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Histórico detalhado -->
+                    <div class="detailed-history">
+                        <h3>Histórico Completo</h3>
+                        <div id="sessions-history">
+                            <!-- Será preenchido pelo JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tela de Amigos -->
+            <div id="friends-screen" class="screen">
+                <div class="friends-container">
+                    <h2>👥 Amigos</h2>
+                    
+                    <!-- Buscar amigos -->
+                    <div class="search-friends">
+                        <h3>Adicionar Amigo</h3>
+                        <div class="search-input-group">
+                            <input type="text" id="friend-search" placeholder="Nome de usuário">
+                            <button id="search-friend-btn" class="control-btn">Buscar</button>
+                        </div>
+                        <div id="search-results"></div>
+                    </div>
+
+                    <!-- Solicitações pendentes -->
+                    <div class="pending-requests">
+                        <h3>Solicitações Pendentes</h3>
+                        <div id="pending-requests-list">
+                            <!-- Será preenchido pelo JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Lista de amigos -->
+                    <div class="friends-list">
+                        <h3>Meus Amigos</h3>
+                        <div id="friends-list">
+                            <!-- Será preenchido pelo JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de estatísticas do amigo -->
+            <div id="friend-stats-modal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="friend-name">Estatísticas do Amigo</h3>
+                        <button id="close-modal" class="close-btn">×</button>
+                    </div>
+                    <div class="modal-body" id="friend-stats-content">
+                        <!-- Será preenchido pelo JavaScript -->
+                    </div>
                 </div>
             </div>
         </main>
