@@ -107,17 +107,19 @@ class BreathingSession(models.Model):
 
     def complete_session(self):
         """Marcar sessão como concluída e calcular duração real"""
-        if self.status == 'in_progress':
+        if self.status != 'completed' and self.status != 'cancelled':
             self.completed_at = timezone.now()
             self.actual_duration = self.completed_at - self.started_at
             self.status = 'completed'
             self.save()
             
-            # Atualizar estatísticas do usuário
-            profile, created = UserProfile.objects.get_or_create(user=self.user)
-            profile.total_sessions += 1
-            profile.total_breathing_time += self.actual_duration
-            profile.save()
+            # Atualizar estatísticas do usuário apenas se ainda não foi atualizado
+            if not hasattr(self, '_stats_updated'):
+                profile, created = UserProfile.objects.get_or_create(user=self.user)
+                profile.total_sessions += 1
+                profile.total_breathing_time += self.actual_duration
+                profile.save()
+                self._stats_updated = True
 
     @property
     def duration_formatted(self):

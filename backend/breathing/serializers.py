@@ -225,7 +225,8 @@ class BreathingSessionCreateSerializer(serializers.ModelSerializer):
     """Serializer simplificado para criação de sessões"""
     class Meta:
         model = BreathingSession
-        fields = ['rounds', 'breaths_per_round', 'breath_duration', 'notes']
+        fields = ['id', 'rounds', 'breaths_per_round', 'breath_duration', 'notes', 'status', 'started_at']
+        read_only_fields = ['id', 'status', 'started_at']
 
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user

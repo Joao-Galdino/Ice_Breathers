@@ -192,12 +192,18 @@ class BreathingSessionViewSet(viewsets.ModelViewSet):
         """Completar uma sessão de respiração"""
         session = self.get_object()
         
-        if session.status != 'in_progress':
+        if session.status == 'cancelled':
             return Response(
-                {'error': 'Esta sessão já foi finalizada'}, 
+                {'error': 'Esta sessão foi cancelada'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # Se já está completa, apenas retornar os dados
+        if session.status == 'completed':
+            serializer = BreathingSessionSerializer(session)
+            return Response(serializer.data)
+        
+        # Completar a sessão se ainda não foi
         session.complete_session()
         serializer = BreathingSessionSerializer(session)
         return Response(serializer.data)
@@ -337,7 +343,8 @@ class BreathingSessionViewSet(viewsets.ModelViewSet):
         
         # Verificar se é o último round
         if round_number >= session.rounds:
-            session.status = 'completed'
+            # Último round - manter status para permitir finalização manual
+            session.status = 'in_progress'
         else:
             session.status = 'in_progress'  # Próximo round
         
